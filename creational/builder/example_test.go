@@ -7,7 +7,8 @@ import (
 
 func Test(t *testing.T) {
 	devNode := NewDevNode("dev", []string{"评审需求", "研发", "单元测试通过"})
-	productNode := NewProductNode("product", []string{"写需求", "验证通过"})
+	testNode := NewTestNode("test", []string{"测试通过"})
+	productNode := NewProductNode("product", []string{"验证通过, 发布"})
 
 	applyWorkOrderBuilder := new(ApplyWorkOrderBuilder)
 
@@ -18,8 +19,12 @@ func Test(t *testing.T) {
 			Order: 1,
 		},
 		{
-			Node:  productNode,
+			Node:  testNode,
 			Order: 2,
+		},
+		{
+			Node:  productNode,
+			Order: 3,
 		},
 	})
 
@@ -45,8 +50,8 @@ type WorkOrderModel struct {
 
 // logic
 type IWorkOrderBuilder interface {
-	BuildMilestone(milestone *Milestone) error
-	BuildContent(content string) error
+	SetMilestone(milestone *Milestone) error
+	SetContent(content string) error
 	GetResult() *WorkOrderModel
 }
 
@@ -70,10 +75,10 @@ func (d *Director) SetBuilder(builder IWorkOrderBuilder) {
 
 func (d *Director) Generate(content string, milestones []*Milestone) *WorkOrderModel {
 	for _, m := range milestones {
-		_ = d.builder.BuildMilestone(m)
+		_ = d.builder.SetMilestone(m)
 	}
 
-	_ = d.builder.BuildContent(content)
+	_ = d.builder.SetContent(content)
 
 	return d.builder.GetResult()
 }
@@ -83,12 +88,12 @@ type ApplyWorkOrderBuilder struct {
 	content string
 }
 
-func (a *ApplyWorkOrderBuilder) BuildMilestone(milestone *Milestone) error {
+func (a *ApplyWorkOrderBuilder) SetMilestone(milestone *Milestone) error {
 	a.milestones = append(a.milestones, milestone)
 	return nil
 }
 
-func (a *ApplyWorkOrderBuilder) BuildContent(content string) error {
+func (a *ApplyWorkOrderBuilder) SetContent(content string) error {
 	a.content = content
 	return nil
 }
@@ -131,6 +136,26 @@ func (d *DevNode) GetName() string {
 }
 
 func (d *DevNode) GetJobs() []string {
+	return d.jobs
+}
+
+type TestNode struct {
+	name string
+	jobs []string
+}
+
+func NewTestNode(name string, jobs []string) *TestNode {
+	return &TestNode{
+		name: name,
+		jobs: jobs,
+	}
+}
+
+func (d *TestNode) GetName() string {
+	return d.name
+}
+
+func (d *TestNode) GetJobs() []string {
 	return d.jobs
 }
 
